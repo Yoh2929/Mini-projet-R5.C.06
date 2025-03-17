@@ -1,57 +1,78 @@
-import csv
+import sys
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
-import sys
+import seaborn as sns
+from scipy import stats
 
-def load_data(filepath):
-    data = pd.read_csv(filepath)
-    return data
+# Charger les données (supposons que le contenu CSV est enregistré dans un fichier 'data.csv')
+# Vous pouvez remplacer cela par votre méthode de chargement des données
+save_path = sys.argv[1] if len(sys.argv) > 1 else '.'
 
-def filter_data(data):
-    filtered_data = data[['Language', 'Response_Accuracy']].dropna()
-    languages = filtered_data['Language'].tolist()
-    accuracies = filtered_data['Response_Accuracy'].astype(float).tolist()
-    return languages, accuracies
+df = pd.read_csv('./archive/deepseek_vs_chatgpt.csv')
 
-def encode_languages(languages):
-    unique_languages = list(set(languages))
-    language_map = {lang: idx for idx, lang in enumerate(unique_languages)}
-    encoded_languages = [language_map[lang] for lang in languages]
-    return encoded_languages, language_map
+# 1. Analyse descriptive par langue
+print("Analyse descriptive de la précision par langue:")
+language_stats = df.groupby('Language')['Response_Accuracy'].agg(['count', 'mean', 'median', 'std', 'min', 'max']).sort_values(by='mean', ascending=False)
+print(language_stats)
 
-def linear_regression(x, y):
-    n = len(x)
-    x_mean = np.mean(x)
-    y_mean = np.mean(y)
-    xy_mean = np.mean(np.multiply(x, y))
-    xx_mean = np.mean(np.multiply(x, x))
+# 2. Visualisations
+plt.figure(figsize=(10, 6))
+sns.set_style("whitegrid")
 
-    slope = (xy_mean - x_mean * y_mean) / (xx_mean - x_mean * x_mean)
-    intercept = y_mean - slope * x_mean
-    return slope, intercept
+# Graphique à barres de la précision moyenne par langue
+plt.subplot(1, 2, 1)
+sns.barplot(x=language_stats.index, y=language_stats['mean'], palette='viridis')
+plt.title('Précision moyenne par langue')
+plt.xlabel('Langue')
+plt.ylabel('Précision moyenne')
+plt.xticks(rotation=45)
 
-def plot_regression(x, y, slope, intercept, save_path):
-    plt.scatter(x, y, color='blue')
-    plt.plot(x, slope * np.array(x) + intercept, color='red')
-    plt.xlabel('Encoded Language')
-    plt.ylabel('Response Accuracy')
-    plt.title('Linear Regression: Language vs Response Accuracy')
-    plt.savefig(f'{save_path}/regression_plot.png')
-    plt.close()
-    print(f"Graph saved as '{save_path}/regression_plot.png'.")
+# Boîte à moustaches pour la distribution des précisions par langue
+plt.subplot(1, 2, 2)
+sns.boxplot(x='Language', y='Response_Accuracy', data=df, palette='viridis')
+plt.title('Distribution des précisions par langue')
+plt.xlabel('Langue')
+plt.ylabel('Précision')
+plt.xticks(rotation=45)
 
-def main():
-    filepath = './archive/deepseek_vs_chatgpt.csv'
-    save_path = sys.argv[1] if len(sys.argv) > 1 else '.'
-    data = load_data(filepath)
-    languages, accuracies = filter_data(data)
-    encoded_languages, language_map = encode_languages(languages)
+plt.tight_layout()
+plt.savefig(f'{save_path}/language_accuracy_analysis.png')
+plt.close()
+print(f'{save_path}/language_accuracy_analysis.png')
+
+# 3. Tests statistiques
+# ANOVA pour tester si les différences entre langues sont significatives
+languages = df['Language'].unique()
+if len(languages) > 1:  # S'assurer qu'il y a au moins 2 langues pour faire l'ANOVA
+    groups = [df[df['Language'] == lang]['Response_Accuracy'].values for lang in languages]
+    f_stat, p_value = stats.f_oneway(*groups)
     
-    slope, intercept = linear_regression(encoded_languages, accuracies)
-    print(f'Regression Line: y = {slope}x + {intercept}')
+    print("\nRésultats ANOVA:")
+    print(f"F-statistic: {f_stat:.4f}")
+    print(f"p-value: {p_value:.4f}")
     
-    plot_regression(encoded_languages, accuracies, slope, intercept, save_path)
+    if p_value < 0.05:
+        print("Différence significative entre les langues (p<0.05)")
+        
+        # Analyse plus détaillée avec Tukey HSD pour voir quelles paires de langues diffèrent
+        from statsmodels.stats.multicomp import pairwise_tukeyhsd
+        tukey = pairwise_tukeyhsd(df['Response_Accuracy'], df['Language'], alpha=0.05)
+        print("\nTest post-hoc Tukey HSD:")
+        print(tukey)
+    else:
+        print("Pas de différence significative entre les langues (p>0.05)")
 
-if __name__ == "__main__":
-    main()
+# 4. Relation avec d'autres variables (optionnel)
+print("\nMatrice de corrélation entre Response_Accuracy et d'autres variables numériques:")
+correlation_columns = ['Response_Accuracy', 'Input_Text_Length', 'Response_Tokens', 
+                       'User_Rating', 'User_Experience_Score', 'Session_Duration_sec', 'Response_Speed_sec']
+correlation_columns = [col for col in correlation_columns if col in df.columns]
+correlation_matrix = df[correlation_columns].corr()
+print(correlation_matrix['Response_Accuracy'].sort_values(ascending=False))
+
+# 5. Vérifier si la plateforme ou le modèle influence la relation entre langue et précision
+if 'AI_Platform' in df.columns and 'AI_Model_Version' in df.columns:
+    print("\nPrécision moyenne par langue et plateforme:")
+    platform_lang_accuracy = df.groupby(['AI_Platform', 'Language'])['Response_Accuracy'].mean().unstack()
+    print(platform_lang_accuracy)
