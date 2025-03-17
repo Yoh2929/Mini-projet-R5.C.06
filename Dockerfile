@@ -13,5 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copier le reste des fichiers de l'application dans le conteneur
 COPY . .
 
+# Définir un volume pour sauvegarder les plots
+VOLUME /plots
+
 # Définir la commande par défaut pour exécuter l'application
-CMD ["python", "app.py"]
+CMD ["python", "app.py", "/plots"]
