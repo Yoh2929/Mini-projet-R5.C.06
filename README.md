@@ -19,7 +19,12 @@ docker build --pull --rm -f './Dockerfile' -t 'miniprojet:latest' .
 ### Lancer l'image
 Pour lancer l'image, ouvrir un terminal :
 ```
-docker run --rm -v ./plots:/plots miniprojet
+docker run --rm -v ./plots:/plots -u $(id -u):$(id -g) miniprojet
+```
+
+Pour obtenir les résultats d'un programme python en particulier :
+```
+docker run --rm -v ./plots:/plots -u $(id -u):$(id -g) miniprojet python programme.py
 ```
 
 ### Résultats

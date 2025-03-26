@@ -5,10 +5,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
 
-# Charger les données (supposons que le contenu CSV est enregistré dans un fichier 'data.csv')
-# Vous pouvez remplacer cela par votre méthode de chargement des données
-save_path = sys.argv[1] if len(sys.argv) > 1 else '.'
-
 df = pd.read_csv('./archive/deepseek_vs_chatgpt.csv')
 
 # 1. Analyse descriptive par langue
@@ -37,9 +33,9 @@ plt.ylabel('Précision')
 plt.xticks(rotation=45)
 
 plt.tight_layout()
-plt.savefig(f'{save_path}/language_accuracy_analysis.png')
+plt.savefig(f'/plots/language_accuracy_analysis.png')
 plt.close()
-print(f'{save_path}/language_accuracy_analysis.png')
+print(f'/plots/language_accuracy_analysis.png')
 
 # 3. Tests statistiques
 # ANOVA pour tester si les différences entre langues sont significatives
