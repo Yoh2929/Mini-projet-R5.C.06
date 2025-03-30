@@ -5,14 +5,15 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
 
+# Charger les données
 df = pd.read_csv('./archive/deepseek_vs_chatgpt.csv')
 
-# 1. Analyse descriptive par langue
+# Première analyse : Par langue
 print("Analyse descriptive de la précision par langue:")
 language_stats = df.groupby('Language')['Response_Accuracy'].agg(['count', 'mean', 'median', 'std', 'min', 'max']).sort_values(by='mean', ascending=False)
 print(language_stats)
 
-# 2. Visualisations
+# Visualisations
 plt.figure(figsize=(10, 6))
 sns.set_style("whitegrid")
 
@@ -37,7 +38,7 @@ plt.savefig(f'/plots/language_accuracy_analysis.png')
 plt.close()
 print(f'/plots/language_accuracy_analysis.png')
 
-# 3. Tests statistiques
+# Tests statistiques
 # ANOVA pour tester si les différences entre langues sont significatives
 languages = df['Language'].unique()
 if len(languages) > 1:  # S'assurer qu'il y a au moins 2 langues pour faire l'ANOVA
@@ -59,7 +60,7 @@ if len(languages) > 1:  # S'assurer qu'il y a au moins 2 langues pour faire l'AN
     else:
         print("Pas de différence significative entre les langues (p>0.05)")
 
-# 4. Relation avec d'autres variables (optionnel)
+# Relation avec d'autres variables (optionnel)
 print("\nMatrice de corrélation entre Response_Accuracy et d'autres variables numériques:")
 correlation_columns = ['Response_Accuracy', 'Input_Text_Length', 'Response_Tokens', 
                        'User_Rating', 'User_Experience_Score', 'Session_Duration_sec', 'Response_Speed_sec']
@@ -67,8 +68,32 @@ correlation_columns = [col for col in correlation_columns if col in df.columns]
 correlation_matrix = df[correlation_columns].corr()
 print(correlation_matrix['Response_Accuracy'].sort_values(ascending=False))
 
-# 5. Vérifier si la plateforme ou le modèle influence la relation entre langue et précision
+# Vérifier si la plateforme ou le modèle influence la relation entre langue et précision
 if 'AI_Platform' in df.columns and 'AI_Model_Version' in df.columns:
     print("\nPrécision moyenne par langue et plateforme:")
     platform_lang_accuracy = df.groupby(['AI_Platform', 'Language'])['Response_Accuracy'].mean().unstack()
     print(platform_lang_accuracy)
+
+# Convertir la colonne Date en datetime
+df['Date'] = pd.to_datetime(df['Date'])
+
+
+# Seconde Analyse : expérience utilisateur
+print("\n=== Analyse des facteurs influençant l'expérience utilisateur ===")
+
+# Calculer les corrélations avec User_Rating et User_Experience_Score
+correlation_cols = ['Response_Accuracy', 'Response_Speed_sec', 'Session_Duration_sec', 
+                    'Input_Text_Length', 'Response_Tokens', 'Correction_Needed']
+user_exp_corr = df[correlation_cols + ['User_Rating', 'User_Experience_Score']].corr()
+print("Corrélations avec User_Rating:")
+print(user_exp_corr['User_Rating'].sort_values(ascending=False))
+print("\nCorrélations avec User_Experience_Score:")
+print(user_exp_corr['User_Experience_Score'].sort_values(ascending=False))
+
+# Visualisation des corrélations
+plt.figure(figsize=(12, 10))
+sns.heatmap(user_exp_corr, annot=True, cmap='coolwarm', vmin=-1, vmax=1, center=0)
+plt.title('Matrice de corrélation des facteurs liés à l\'expérience utilisateur')
+plt.tight_layout()
+plt.savefig(f'/plots/user_experience_correlation.png')
+plt.show()
