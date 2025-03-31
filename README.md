@@ -29,3 +29,11 @@ docker run --rm -v ./plots:/plots -u $(id -u):$(id -g) miniprojet python program
 
 ### Résultats
 Les résultats de l'exécution de l'image se touvent dans le dossier **plots/**.
+
+
+## Accéder aux slides
+Les [slides de présentation](/slides-mini-projet.odp) du projet se trouvent à la racine du projet :
+```
+Mini-projet-R5.C.06
+└── slides-mini-projet.odp
+```
