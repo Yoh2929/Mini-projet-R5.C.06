@@ -38,3 +38,10 @@ Les [slides de présentation](/slides-mini-projet.odp) du projet se trouvent à 
 Mini-projet-R5.C.06
 └── slides-mini-projet.odp
 ```
+
+## Accéder au rapport
+Le [rapport](/rapport-mini-projet.pdf) est disponible à la racine du projet :
+```
+Mini-projet-R5.C.06
+└── rapport-mini-projet.pdf
+```
