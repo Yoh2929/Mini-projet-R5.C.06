@@ -21,8 +21,9 @@ Pour lancer l'image, ouvrir un terminal :
 ```
 docker run --rm -v ./plots:/plots -u $(id -u):$(id -g) miniprojet
 ```
+Cette commande suffit à obtenir les résultats des analyses.
 
-Pour obtenir les résultats d'un programme python en particulier :
+Pour obtenir les résultats d'un programme python en particulier (optionnel):
 ```
 docker run --rm -v ./plots:/plots -u $(id -u):$(id -g) miniprojet python programme.py
 ```
